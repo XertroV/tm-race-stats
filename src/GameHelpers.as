@@ -23,6 +23,7 @@ string get_CurrentGameMode() {
 
 bool get_IsGameModeCotdKO() {
     return CurrentGameMode == "TM_KnockoutDaily_Online"
+        || CurrentGameMode == "TM_Knockout_Debug"
         || CurrentGameMode == "TM_Knockout_Online";
 }
 

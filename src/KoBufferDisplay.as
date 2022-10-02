@@ -1,4 +1,10 @@
 namespace KoBuffer {
+/* bugs:
+- when at 0, no behind shows up even if it should:
+  d = RaceTime - ahead.lastCP
+  nb: racetime here is sorta the curr pos of the ahead car
+
+*/
     void Main() {
         startnew(InitCoro);
     }
@@ -25,6 +31,7 @@ namespace KoBuffer {
 
     bool get_IsGameModeCotdKO() {
         return lastGM == "TM_KnockoutDaily_Online"
+            || lastGM == "TM_Knockout_Debug"
             || lastGM == "TM_Knockout_Online";
     }
 }
@@ -41,7 +48,7 @@ namespace KoBufferUI {
 
 #if DEV
     PlayerCpInfo@ testInfo;
-    uint lastPlayerCp = 0;
+    int lastPlayerCp = 0;
 #endif
 
     void RenderMenu() {
@@ -94,8 +101,14 @@ namespace KoBufferUI {
                 int offset = randAdjust > 75 ? -1 : 0;
                 @testInfo = PlayerCpInfo(localPlayer, offset);
                 testInfo.lastCpTime += randAdjust;
-                testInfo.cpTimes[testInfo.cpCount] += randAdjust;
                 testInfo.lastRank += (randAdjust < 0) ? 0 : 2;
+                if (randAdjust >= -75)
+                    testInfo.cpTimes[testInfo.cpCount] += randAdjust;
+                else { // invent a cp ahead
+                    testInfo.lastCpTime -= randAdjust * 3;
+                    testInfo.cpTimes.InsertLast(testInfo.lastCpTime);
+                    testInfo.cpCount += 1;
+                }
                 warn('player: ' + localPlayer.ToString());
                 warn('adding postCpInfo: ' + testInfo.ToString());
             }
@@ -106,6 +119,9 @@ namespace KoBufferUI {
         if (localPlayer is null || preCpInfo is null || postCpInfo is null) {
 #if DEV
             trace('a cp time player was null!');
+            // trace(localPlayer is null ? 'y' : 'n');
+            // trace(preCpInfo is null ? 'y' : 'n');
+            // trace(postCpInfo is null ? 'y' : 'n');
 #endif
             return;
         }
@@ -121,11 +137,36 @@ namespace KoBufferUI {
         isBehind = localPlayer.lastRank > targetCpInfo.lastRank; // should never be ==
         // are we at same CP?
         sameCp = localPlayer.cpCount == targetCpInfo.cpCount;
-        // if so, ms delta trivial to calculate
+
+        // time Ahead is ahead of Behind is:
+        // 1. relative_cp_diff = behind.latestCpTime - ahead.latestCpTime
+        //   note: relative_cp_diff can be negative
+        // 2. absolute_cp_diff = ahead.latestCpTime - ahead.cpTimes[behind.cpCount]
+        // msDelta = relative + absolute
+        //
+        // sanity check:
+        // absolute should be == 0 when at same cp -> yes
+        // behind takes at least as long as absolute to catch up
+        // if Behind hit latest cp before Ahead (lower time), they are behind less than the absolute delta by the relative delta, so relative < 0 -> yes
+        // but if Behind hit latest cp after Ahead, then relative delta should be positive -> yes
+
+//         auto aheadPlayer = isBehind ? targetCpInfo : localPlayer;
+//         auto behindPlayer = isBehind ? localPlayer : targetCpInfo;
+//         int relativeCpDiff = behindPlayer.lastCpTime - aheadPlayer.lastCpTime;
+//         int absoluteCpDiff = sameCp ? 0 : (aheadPlayer.lastCpTime - aheadPlayer.cpTimes[behindPlayer.cpCount]);
+//         msDelta = absoluteCpDiff + relativeCpDiff;
+// #if DEV
+//         if (msDelta < 0) { warn('msDelta < 0! value: ' + msDelta); }
+// #endif
+
         if (sameCp)
             msDelta = Math::Abs(localPlayer.lastCpTime - targetCpInfo.lastCpTime);
         else { // otherwise, we're at least (GameTime - player[cp]) ahead/behind
-            uint cpToCompare = Math::Min(targetCpInfo.cpCount, localPlayer.cpCount);
+            uint cpToCompare = Math::Max(targetCpInfo.cpCount, localPlayer.cpCount);
+            // diff between
+            auto aheadPlayer = isBehind ? targetCpInfo : localPlayer;
+            auto behindPlayer = isBehind ? localPlayer : targetCpInfo;
+
             if (isBehind)
                 msDelta = CurrentRaceTime - targetCpInfo.cpTimes[cpToCompare];
             else
@@ -167,14 +208,14 @@ namespace KoBufferUI {
     }
 
     [Setting color category="KO Buffer Time" name="Color: Ahead w/in 1 CP"]
-    vec4 Col_AheadDefinite = vec4(0, .7, 0, 1);
+    vec4 Col_AheadDefinite = vec4(0.008f, 1.000f, 0.000f, 1.000f);
     [Setting color category="KO Buffer Time" name="Color: Behind w/in 1 CP"]
-    vec4 Col_BehindDefinite = vec4(0.629f, 0.000f, 0.000f, 1.000f);
+    vec4 Col_BehindDefinite = vec4(0.942f, 0.502f, 0.000f, 1.000f);
 
     [Setting color category="KO Buffer Time" name="Color: Far Ahead (actively counts)"]
-    vec4 Col_FarAhead = vec4(0.082f, 0.533f, 0.082f, 0.900f);
+    vec4 Col_FarAhead = vec4(0.000f, 0.788f, 0.103f, 1.000f);
     [Setting color category="KO Buffer Time" name="Color: Far Behind (actively counts)"]
-    vec4 Col_FarBehind = vec4(0.873f, 0.145f, 0.145f, 0.900f);
+    vec4 Col_FarBehind = vec4(0.961f, 0.007f, 0.007f, 1.000f);
 
     [Setting category="KO Buffer Time" name="Enable Buffer Time BG Color"]
     bool Setting_DrawBufferTimeBG = true;

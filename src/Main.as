@@ -35,8 +35,6 @@ void _Unload() {
 }
 
 void InitCoro() {
-    print('theHook is null? ' + (theHook is null ? 'y' : 'n'));
-    print('koFeedHook is null? ' + (koFeedHook is null ? 'y' : 'n'));
     HookRaceStatsEvents@ hook = HookRaceStatsEvents();
     @theHook = hook;
     MLHook::RegisterMLHook(theHook, "RaceStats");
@@ -367,7 +365,10 @@ class HookRaceStatsEvents : MLHook::HookMLEventsByType {
         auto prevPlayerStats = GetPlayer(player.name);
         @latestPlayerStats[player.name] = player;
         // copy past cp times
-        if (prevPlayerStats !is null && player.cpCount == 1 + prevPlayerStats.cpCount) {
+        if (prevPlayerStats !is null && (
+                player.cpCount == 1 + prevPlayerStats.cpCount
+                || prevPlayerStats.spawnStatus > player.spawnStatus)
+            ) {
             player.cpTimes = prevPlayerStats.cpTimes;
             player.cpTimes.InsertLast(player.lastCpTime);
             // for (uint i = 0; i < prevPlayerStats.cpTimes.Length; i++) {

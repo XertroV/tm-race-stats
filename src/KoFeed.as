@@ -114,7 +114,7 @@ class HookKoStatsEvents : MLHook::HookMLEventsByType {
         }
         string key = evt.data[0];
         int value = Text::ParseInt(evt.data[1]);
-        if (key == "ServerNumber") division = value;
+        if (key == "ServerNumber") division = value + 1;
         else if (key == "MapRoundNb") mapRoundNb = value;
         else if (key == "MapRoundTotal") mapRoundTotal = value;
         else if (key == "RoundNb") roundNb = value;

@@ -80,6 +80,7 @@ for pluginSrc in ${pluginSources[@]}; do
       rm -vr $_build_dest/* || true
       cp -LR -v ./$pluginSrc/* $_build_dest/
       cp -LR -v ./fonts $_build_dest/fonts
+      cp -LR -v ./fonts/* $_build_dest/fonts/
       # cp -LR -v ./external/* $_build_dest/
       cp -LR -v ./info.toml $_build_dest/
       _copy_exit_code="$?"
