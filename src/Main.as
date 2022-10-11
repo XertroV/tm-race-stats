@@ -9,7 +9,6 @@ enum Cmp {Lt = -1, Eq = 0, Gt = 1}
 
 todo show green when players fin
 
-
  */
 void Main() {
     DepCheck();
