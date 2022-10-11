@@ -179,3 +179,12 @@ bool MDisabledButton(bool disabled, const string &in text, const vec2 &in size =
 //         UI::EndTable();
 //     }
 // }
+
+/*
+Notification stuff
+*/
+
+void NotifyDepError(const string &in msg) {
+    warn(msg);
+    UI::ShowNotification(Meta::ExecutingPlugin().Name + ": Dependency Error", msg, vec4(.9, .6, .1, .5), 15000);
+}
