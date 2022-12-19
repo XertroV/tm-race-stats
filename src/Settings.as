@@ -36,7 +36,11 @@ void RenderSettings_General() {
     UI::EndDisabled();
     if (!disabled) {
         UI::SameLine();
+        vec2 pos = UI::GetCursorPos();
         UI::TextWrapped("\\$fe1 " + Icons::ExclamationTriangle + "  Warning! Doing this too much can crash the game. Settings only save if the game exits cleanly, and the safest time to load fonts is at startup. Once you find the right font size, you should restart the game so that the setting persists properly. (Note: this setting will save even if you don't click 'Reload font'.)");
+        vec2 pos2 = UI::GetCursorPos();
+        UI::SetCursorPos(vec2(pos.x, pos2.y));
+        UI::Markdown("[Logged as Openplanet Github Issue #39](https://github.com/openplanet-nl/issues/issues/39)");
     }
 
     UI::Separator();
