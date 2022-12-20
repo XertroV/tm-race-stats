@@ -15,7 +15,6 @@ bool S_ShowLapNumber = true;
 
 [SettingsTab name="General" icon="Cogs" order="1"]
 void RenderSettings_General() {
-    PushMainFont();
 
     DrawSortAndBestTimesSettings();
 
@@ -44,9 +43,9 @@ void RenderSettings_General() {
     }
 
     UI::Separator();
-
-    UI::TextWrapped("Spectate a player by shift clicking their name in the main Race Stats window.");
-
+    PushMainFont();
+    UI::Text("Font demo");
+    UI::TextWrapped("Spectate a player by clicking their name in the main Race Stats window.");
     PopMainFont();
 }
 
@@ -73,13 +72,9 @@ void DrawSortAndBestTimesSettings() {
 
 [SettingsTab name="Colors" icon="PaintBrush" order="10"]
 void RenderSettings_Colors() {
-    PushMainFont();
-
     finishColor = UI::InputColor4("Finished Color", finishColor);
     blueColor = UI::InputColor4("CP Gain Position Color", blueColor);
     redColor = UI::InputColor4("CP Lose Position Color", redColor);
 
     Setting_HighlightLocalPlayersName = UI::Checkbox("Highlight your name in the race stats?", Setting_HighlightLocalPlayersName);
-
-    PopMainFont();
 }
