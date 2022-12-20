@@ -127,7 +127,12 @@ void PopMainFont() {
     UI::PopFont();
 }
 
-void Render() {}
+void Render() {
+    if (!Setting_ShowWhenOverlayOff || !g_windowVisible) return;
+    if (!UI::IsOverlayShown()) {
+        RenderInterface();
+    }
+}
 
 void RenderInterface() {
     if (!g_windowVisible) return;

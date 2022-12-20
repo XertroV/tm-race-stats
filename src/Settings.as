@@ -5,6 +5,9 @@ float Setting_FontSize = 18;
 bool Setting_HideSortSettings = false;
 
 [Setting hidden]
+bool Setting_ShowWhenOverlayOff = false;
+
+[Setting hidden]
 bool Setting_HighlightLocalPlayersName = true;
 
 [Setting hidden]
@@ -15,6 +18,8 @@ bool S_ShowLapNumber = true;
 
 [SettingsTab name="General" icon="Cogs" order="1"]
 void RenderSettings_General() {
+
+    Setting_ShowWhenOverlayOff = UI::Checkbox("Show the main window when the overlay is off?", Setting_ShowWhenOverlayOff);
 
     DrawSortAndBestTimesSettings();
 
