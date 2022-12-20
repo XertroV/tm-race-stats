@@ -138,7 +138,7 @@ void RenderInterface() {
     if (!g_windowVisible) return;
     PushMainFont();
     UI::SetNextWindowSize(500, 800, UI::Cond::FirstUseEver);
-    if (UI::Begin(Meta::ExecutingPlugin().Name, g_windowVisible, UI::WindowFlags::NoCollapse)) { // UI::WindowFlags::AlwaysAutoResize |
+    if (UI::Begin(Meta::ExecutingPlugin().Name, g_windowVisible, UI::WindowFlags::None)) { // UI::WindowFlags::AlwaysAutoResize |
         DrawMainInterior();
     }
     UI::End();
