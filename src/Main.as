@@ -342,13 +342,14 @@ const string MsToSeconds(int t) {
     // return Text::Format("%.3f", float(t) / 1000.0);
 }
 
-bool g_ShiftKeyDown = false;
+// just pretend the shift key is always pressed down.
+bool g_ShiftKeyDown = true;
 
 /** Called whenever a key is pressed on the keyboard. See the documentation for the [`VirtualKey` enum](https://openplanet.dev/docs/api/global/VirtualKey).
 */
-UI::InputBlocking OnKeyPress(bool down, VirtualKey key) {
-    if (key == VirtualKey::Shift) {
-        g_ShiftKeyDown = down;
-    }
-    return UI::InputBlocking::DoNothing;
-}
+// UI::InputBlocking OnKeyPress(bool down, VirtualKey key) {
+//     if (key == VirtualKey::Shift) {
+//         g_ShiftKeyDown = down;
+//     }
+//     return UI::InputBlocking::DoNothing;
+// }
