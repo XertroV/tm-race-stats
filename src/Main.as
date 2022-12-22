@@ -198,6 +198,20 @@ vec4 ScaledCpDeltaColor(int cpd) {
     return col * progress + vec4(1,1,1,1) * (1. - progress);
 }
 
+uint GetLapCount() {
+    if (S_EnableCustomLapCount) {
+        return Math::Max(1, S_CustomLapCount);
+    }
+    return raceData.LapCount;
+}
+
+uint GetCPsToFinish() {
+    if (S_EnableCustomLapCount) {
+        return GetLapCount() * (raceData.CpCount + 1);
+    }
+    return raceData.CPsToFinish;
+}
+
 void DrawMainInterior() {
     auto theHook = MLFeed::GetRaceData_V2();
     if (theHook is null) return;
@@ -205,9 +219,10 @@ void DrawMainInterior() {
     vec2 pos = UI::GetCursorPos();
     UI::AlignTextToFramePadding();
 
-    string cpCountStr = theHook.LapCount == 1 ? "" : ("; " + (theHook.CPCount + 1) + " per Lap");
+    string cpCountStr = GetLapCount() == 1 ? "" : ("; " + (theHook.CPCount + 1) + " per Lap");
     auto nbPlayers = theHook.SortedPlayers_Race.Length;
-    UI::Text("" + nbPlayers + " Players  |  " + theHook.CPsToFinish + " Total Checkpoints" + cpCountStr);
+    if (S_EnableCustomLapCount) cpCountStr += "\\$888 (custom lap count)";
+    UI::Text("" + nbPlayers + " Players  |  " + GetCPsToFinish() + " Total Checkpoints" + cpCountStr);
 
     float btnSize = UI::GetFrameHeight();
     UI::SetCursorPos(pos + vec2(UI::GetWindowContentRegionWidth() - btnSize, 0));
@@ -235,7 +250,7 @@ void DrawMainInterior() {
             ? theHook.SortedPlayers_TimeAttack
             : theHook.SortedPlayers_Race_Respawns);
 
-    bool showingLaps = S_ShowLapNumber && theHook.LapCount > 1;
+    bool showingLaps = S_ShowLapNumber && GetLapCount() > 1;
 
     // SizingFixedFit / fixedsame / strechsame / strechprop
     if (UI::BeginTable("player times", cols, UI::TableFlags::SizingStretchProp | UI::TableFlags::ScrollY)) {
@@ -259,7 +274,7 @@ void DrawMainInterior() {
                 if (player is null) continue;
                 if (player.spawnStatus != MLFeed::SpawnStatus::Spawned) {
                     UI::PushStyleColor(UI::Col::Text, vec4(.3, .65, 1, .9));
-                } else if (player.cpCount >= int(theHook.CPsToFinish)) { // finished 1-lap
+                } else if (player.cpCount >= int(GetCPsToFinish())) { // finished 1-lap
                     UI::PushStyleColor(UI::Col::Text, vec4(.2, 1, .2, .9));
                 } else if (player.name == LocalUserName && Setting_HighlightLocalPlayersName) {
                     UI::PushStyleColor(UI::Col::Text, vec4(1, .3, .65, .9));
@@ -283,17 +298,17 @@ void DrawMainInterior() {
                 }
 
                 // lap / CP
-                UI::PushStyleColor(UI::Col::Text, ScaledCpColor(player.CpCount, theHook.CPsToFinish));
+                UI::PushStyleColor(UI::Col::Text, ScaledCpColor(player.CpCount, GetCPsToFinish()));
                 if (showingLaps) {
                     UI::TableNextColumn();
-                    if (player.IsSpawned && player.CpCount < int(theHook.CPsToFinish))
+                    if (player.IsSpawned && player.CpCount < int(GetCPsToFinish()))
                         UI::Text(Text::Format("%.0f", Math::Floor(float(player.CpCount) / float(theHook.CpCount + 1) + 1)));
                 }
 
                 UI::TableNextColumn();
                 string cpCount = tostring(player.CpCount);
                 if (player.CpCount > 0 && S_ShowPercentAfterCP) {
-                    cpCount += " (" + Text::Format("%.0f", Math::Floor(100. * float(player.CpCount) / float(theHook.CPsToFinish))) + "%)";
+                    cpCount += " (" + Text::Format("%.0f", Math::Floor(100. * float(player.CpCount) / float(GetCPsToFinish()))) + "%)";
                 }
                 if (player.IsSpawned)
                     UI::Text(cpCount);

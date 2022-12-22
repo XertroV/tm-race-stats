@@ -16,6 +16,12 @@ bool S_ShowPercentAfterCP = false;
 [Setting hidden]
 bool S_ShowLapNumber = true;
 
+[Setting hidden]
+bool S_EnableCustomLapCount = false;
+
+[Setting hidden]
+int S_CustomLapCount = 26;
+
 [SettingsTab name="General" icon="Cogs" order="1"]
 void RenderSettings_General() {
 
@@ -26,6 +32,17 @@ void RenderSettings_General() {
     Setting_HideSortSettings = UI::Checkbox("Hide sort setting / best time checkbox in main window?", Setting_HideSortSettings);
     S_ShowPercentAfterCP = UI::Checkbox("Show % after CP number?", S_ShowPercentAfterCP);
     S_ShowLapNumber = UI::Checkbox("Show Lap number column?", S_ShowLapNumber);
+
+    UI::Separator();
+
+    UI::AlignTextToFramePadding();
+    UI::Text("Override Lap Count (required for some game modes)");
+    S_EnableCustomLapCount = UI::Checkbox("##lap-count-override", S_EnableCustomLapCount);
+    UI::SameLine();
+    UI::BeginDisabled(!S_EnableCustomLapCount);
+    S_CustomLapCount = UI::InputInt("Lap Count", S_CustomLapCount, 1);
+    S_CustomLapCount = Math::Clamp(S_CustomLapCount, 1, 100);
+    UI::EndDisabled();
 
     UI::Separator();
 
