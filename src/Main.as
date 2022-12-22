@@ -175,6 +175,9 @@ bool Setting_ShowBestTimeCol = true;
 bool Setting_ShowCpPositionDelta = true;
 
 [Setting hidden]
+bool Setting_ShowTimeDelta = true;
+
+[Setting hidden]
 bool Setting_ShowPastCPs = false;
 
 [Setting hidden]
@@ -237,6 +240,8 @@ void DrawMainInterior() {
     uint cols = 4;
     if (S_ShowLapNumber)
         cols++;
+    if (Setting_ShowTimeDelta)
+        cols++;
     if (Setting_ShowBestTimeCol)
         cols++;
     if (Setting_ShowCpPositionDelta)
@@ -244,13 +249,20 @@ void DrawMainInterior() {
     // if (Setting_ShowPastCPs)
     //     cols++;
 
+    bool isTimeAttackSorting = g_sortMethod == SortMethod::TimeAttack;
+
     auto @sorted = g_sortMethod == SortMethod::Race
         ? theHook.SortedPlayers_Race
-        : (g_sortMethod == SortMethod::TimeAttack
+        : (isTimeAttackSorting
             ? theHook.SortedPlayers_TimeAttack
             : theHook.SortedPlayers_Race_Respawns);
 
     bool showingLaps = S_ShowLapNumber && GetLapCount() > 1;
+
+    int firstPlaceTime = -1;
+    if (sorted.Length > 0) {
+        firstPlaceTime = isTimeAttackSorting ? sorted[0].BestTime : sorted[0].LastCpOrRespawnTime;
+    }
 
     // SizingFixedFit / fixedsame / strechsame / strechprop
     if (UI::BeginTable("player times", cols, UI::TableFlags::SizingStretchProp | UI::TableFlags::ScrollY)) {
@@ -260,8 +272,10 @@ void DrawMainInterior() {
             UI::TableSetupColumn("Lap #");
         UI::TableSetupColumn("CP #");
         UI::TableSetupColumn("CP Time");
+        if (Setting_ShowTimeDelta)
+            UI::TableSetupColumn("Time +/-");
         if (Setting_ShowCpPositionDelta)
-            UI::TableSetupColumn("Pos. +/-");
+            UI::TableSetupColumn("Pos +/-");
         if (Setting_ShowBestTimeCol)
             UI::TableSetupColumn("Best Time");
         UI::TableHeadersRow();
@@ -319,6 +333,21 @@ void DrawMainInterior() {
                     UI::Text(MsToSeconds(player.LastCpTime));
                 } else {
                     UI::Text('---');
+                }
+
+                if (Setting_ShowTimeDelta) {
+                    UI::TableNextColumn();
+                    // skip player in 1st
+                    if (i > 0 && (isTimeAttackSorting || player.IsSpawned)) {
+                        int playerTime = isTimeAttackSorting ? sorted[i].BestTime : sorted[i].LastCpOrRespawnTime;
+                        if (playerTime >= 0) {
+                            int delta = firstPlaceTime - playerTime;
+                            if (isTimeAttackSorting) delta *= -1;
+                            UI::PushStyleColor(UI::Col::Text, ScaledCpDeltaColor(10));
+                            UI::Text(MsToSeconds(delta));
+                            UI::PopStyleColor();
+                        }
+                    }
                 }
 
                 if (Setting_ShowCpPositionDelta) {

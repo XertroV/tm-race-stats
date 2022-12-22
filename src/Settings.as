@@ -46,6 +46,9 @@ void RenderSettings_General() {
 
     UI::Separator();
 
+    UI::AlignTextToFramePadding();
+    UI::Text("Font Size");
+
     Setting_FontSize = UI::SliderFloat("Font Size", Setting_FontSize, 14., 32., "%.1f");
     AddSimpleTooltip("Ctrl+click to input exact value.");
 
@@ -86,10 +89,14 @@ void DrawSortAndBestTimesSettings() {
     AddSimpleTooltip("Race:                    Sort by most CPs, then lowest CP time.\nRace_Respawns: Like 'Race' but updates immediately if a player respawns.\nTimeAttack:         Sort by best time set on this server.");
 
     auto pos = UI::GetCursorPos();
-    Setting_ShowBestTimeCol = UI::Checkbox("Show Best Times?", Setting_ShowBestTimeCol);
-    pos.x += UI::GetWindowContentRegionWidth() / 2.;
+    float xStep = UI::GetWindowContentRegionWidth() / 3.;
+    Setting_ShowTimeDelta = UI::Checkbox("Time +/- to 1st?", Setting_ShowTimeDelta);
+    pos.x += xStep;
     UI::SetCursorPos(pos);
-    Setting_ShowCpPositionDelta = UI::Checkbox("Show CP pos. gain/loss?", Setting_ShowCpPositionDelta);
+    Setting_ShowCpPositionDelta = UI::Checkbox("CP pos. +/-?", Setting_ShowCpPositionDelta);
+    pos.x += xStep;
+    UI::SetCursorPos(pos);
+    Setting_ShowBestTimeCol = UI::Checkbox("Best Times?", Setting_ShowBestTimeCol);
 }
 
 [SettingsTab name="Colors" icon="PaintBrush" order="10"]
