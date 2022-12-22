@@ -1,5 +1,5 @@
 [Setting hidden]
-float Setting_FontSize = 18;
+float Setting_FontSize = 22;
 
 [Setting hidden]
 bool Setting_HideSortSettings = false;
@@ -89,8 +89,11 @@ void DrawSortAndBestTimesSettings() {
     AddSimpleTooltip("Race:                    Sort by most CPs, then lowest CP time.\nRace_Respawns: Like 'Race' but updates immediately if a player respawns.\nTimeAttack:         Sort by best time set on this server.");
 
     auto pos = UI::GetCursorPos();
-    float xStep = UI::GetWindowContentRegionWidth() / 3.;
-    Setting_ShowTimeDelta = UI::Checkbox("Time +/- to 1st?", Setting_ShowTimeDelta);
+    float xStep = UI::GetWindowContentRegionWidth() / 4.;
+    Setting_ShowTimeDeltaToFirst = UI::Checkbox("+/- to 1st?", Setting_ShowTimeDeltaToFirst);
+    pos.x += xStep;
+    UI::SetCursorPos(pos);
+    Setting_ShowTimeDeltaToAbove = UI::Checkbox("+/- to next?", Setting_ShowTimeDeltaToAbove);
     pos.x += xStep;
     UI::SetCursorPos(pos);
     Setting_ShowCpPositionDelta = UI::Checkbox("CP pos. +/-?", Setting_ShowCpPositionDelta);

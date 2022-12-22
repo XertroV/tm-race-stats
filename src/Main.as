@@ -88,6 +88,7 @@ PlayerCpTracker@ GetPlayersCpTracker(const string &in name) {
 class PlayerCpTracker {
     int lastCpCount = 0;
     int lastCpRank = 1;
+    int priorCpRank = 1;
     int lastCpRankDelta = 0;
 
     PlayerCpTracker(MLFeed::PlayerCpInfo_V2@ player, int rank) {
@@ -99,6 +100,7 @@ class PlayerCpTracker {
         if (lastCpCount == player.CpCount) return;
         lastCpCount = player.CpCount;
         lastCpRankDelta = rank - lastCpRank;
+        priorCpRank = lastCpRank;
         lastCpRank = rank;
         if (lastCpCount == 0) {
             // lastCpRankDelta = 0;
@@ -175,7 +177,10 @@ bool Setting_ShowBestTimeCol = true;
 bool Setting_ShowCpPositionDelta = true;
 
 [Setting hidden]
-bool Setting_ShowTimeDelta = true;
+bool Setting_ShowTimeDeltaToFirst = true;
+
+[Setting hidden]
+bool Setting_ShowTimeDeltaToAbove = true;
 
 [Setting hidden]
 bool Setting_ShowPastCPs = false;
@@ -240,7 +245,9 @@ void DrawMainInterior() {
     uint cols = 4;
     if (S_ShowLapNumber)
         cols++;
-    if (Setting_ShowTimeDelta)
+    if (Setting_ShowTimeDeltaToFirst)
+        cols++;
+    if (Setting_ShowTimeDeltaToAbove)
         cols++;
     if (Setting_ShowBestTimeCol)
         cols++;
@@ -259,9 +266,9 @@ void DrawMainInterior() {
 
     bool showingLaps = S_ShowLapNumber && GetLapCount() > 1;
 
-    int firstPlaceTime = -1;
+    const MLFeed::PlayerCpInfo_V2@ firstPlacePlayer = null;
     if (sorted.Length > 0) {
-        firstPlaceTime = isTimeAttackSorting ? sorted[0].BestTime : sorted[0].LastCpOrRespawnTime;
+        @firstPlacePlayer = sorted[0];
     }
 
     // SizingFixedFit / fixedsame / strechsame / strechprop
@@ -272,8 +279,10 @@ void DrawMainInterior() {
             UI::TableSetupColumn("Lap #");
         UI::TableSetupColumn("CP #");
         UI::TableSetupColumn("CP Time");
-        if (Setting_ShowTimeDelta)
-            UI::TableSetupColumn("Time +/-");
+        if (Setting_ShowTimeDeltaToFirst)
+            UI::TableSetupColumn("+/- to 1st");
+        if (Setting_ShowTimeDeltaToAbove)
+            UI::TableSetupColumn("+/- to next");
         if (Setting_ShowCpPositionDelta)
             UI::TableSetupColumn("Pos +/-");
         if (Setting_ShowBestTimeCol)
@@ -285,6 +294,7 @@ void DrawMainInterior() {
             for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
                 uint colVars = 1;
                 auto player = sorted[i];
+                auto priorPlayer = i == 0 ? null : sorted[i - 1];
                 if (player is null) continue;
                 if (player.spawnStatus != MLFeed::SpawnStatus::Spawned) {
                     UI::PushStyleColor(UI::Col::Text, vec4(.3, .65, 1, .9));
@@ -335,13 +345,30 @@ void DrawMainInterior() {
                     UI::Text('---');
                 }
 
-                if (Setting_ShowTimeDelta) {
+                if (Setting_ShowTimeDeltaToFirst) {
                     UI::TableNextColumn();
                     // skip player in 1st
                     if (i > 0 && (isTimeAttackSorting || player.IsSpawned)) {
                         int playerTime = isTimeAttackSorting ? sorted[i].BestTime : sorted[i].LastCpOrRespawnTime;
+                        int firstTime = isTimeAttackSorting ? firstPlacePlayer.BestTime : firstPlacePlayer.CpTimes[player.CpCount];
                         if (playerTime >= 0) {
-                            int delta = firstPlaceTime - playerTime;
+                            int delta = firstTime - playerTime;
+                            if (isTimeAttackSorting) delta *= -1;
+                            UI::PushStyleColor(UI::Col::Text, ScaledCpDeltaColor(10));
+                            UI::Text(MsToSeconds(delta));
+                            UI::PopStyleColor();
+                        }
+                    }
+                }
+
+                if (Setting_ShowTimeDeltaToAbove) {
+                    UI::TableNextColumn();
+                    // skip player in 1st
+                    if (i > 0 && priorPlayer !is null && (isTimeAttackSorting || player.IsSpawned)) {
+                        int playerTime = isTimeAttackSorting ? sorted[i].BestTime : sorted[i].LastCpOrRespawnTime;
+                        int aboveTime = isTimeAttackSorting ? priorPlayer.BestTime : priorPlayer.CpTimes[player.CpCount];
+                        if (playerTime >= 0) {
+                            int delta = aboveTime - playerTime;
                             if (isTimeAttackSorting) delta *= -1;
                             UI::PushStyleColor(UI::Col::Text, ScaledCpDeltaColor(10));
                             UI::Text(MsToSeconds(delta));
@@ -354,9 +381,10 @@ void DrawMainInterior() {
                     UI::TableNextColumn();
                     auto cpTracker = GetPlayersCpTracker(player.name);
                     if (cpTracker !is null) {
-                        string cpd = (cpTracker.lastCpRankDelta < 0 ? "-" : (cpTracker.lastCpRankDelta > 0 ? "+" : ""))
-                            + Math::Abs(cpTracker.lastCpRankDelta);
-                        UI::PushStyleColor(UI::Col::Text, ScaledCpDeltaColor(cpTracker.lastCpRankDelta));
+                        int delta = int(i) - cpTracker.priorCpRank;
+                        string cpd = (delta < 0 ? "-" : (delta > 0 ? "+" : ""))
+                            + Math::Abs(delta);
+                        UI::PushStyleColor(UI::Col::Text, ScaledCpDeltaColor(delta));
                         UI::Text(cpd);
                         UI::PopStyleColor();
                     }
