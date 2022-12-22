@@ -112,8 +112,9 @@ class PlayerCpTracker {
             int lastLapCp = (lap - 1) * cpsPerLap;
             int thisLapCp = lap * cpsPerLap;
             if (thisLapCp > player.CpCount) break;
+            if (player.CpTimes[thisLapCp] == 0) continue;
             int tmpLapTime = player.CpTimes[thisLapCp] - player.CpTimes[lastLapCp];
-            if (bestLapTime < 0 || tmpLapTime < bestLapTime) {
+            if (bestLapTime < 0 || tmpLapTime < bestLapTime && tmpLapTime > 0) {
                 bestLapTime = tmpLapTime;
             }
         }
@@ -376,10 +377,9 @@ void DrawMainInterior() {
                         // int extraTime = isTimeAttackSorting || player.CpCount == firstPlacePlayer.CpCount ? 0
                         //     : firstPlacePlayer.LastCpOrRespawnTime - firstPlacePlayer.CpTimes[player.CpCount];
                         if (playerTime >= 0) {
-                            int delta = firstTime - playerTime + extraTime;
+                            int delta = playerTime - firstTime;
                             int deltaMod = 0;
-                            if (isTimeAttackSorting) delta *= -1;
-                            else if (delta != 0) deltaMod = delta < 0 ? -1000 : 1000;
+                            if (delta != 0) deltaMod = delta < 0 ? -1000 : 1000;
                             UI::PushStyleColor(UI::Col::Text, ScaledCpDeltaColor((delta + deltaMod) / 1000, 10));
                             UI::Text(MsToSeconds(delta));
                             UI::PopStyleColor();
@@ -397,10 +397,9 @@ void DrawMainInterior() {
                         // int extraTime = isTimeAttackSorting || player.CpCount == priorPlayer.CpCount ? 0
                         //     : priorPlayer.LastCpOrRespawnTime - priorPlayer.CpTimes[player.CpCount];
                         if (playerTime >= 0) {
-                            int delta = aboveTime - playerTime + extraTime;
+                            int delta = playerTime - aboveTime;
                             int deltaMod = 0;
-                            if (isTimeAttackSorting) delta *= -1;
-                            else if (delta != 0) deltaMod = delta < 0 ? -1000 : 1000;
+                            if (delta != 0) deltaMod = delta < 0 ? -1000 : 1000;
                             UI::PushStyleColor(UI::Col::Text, ScaledCpDeltaColor((delta + deltaMod) / 1000, 10));
                             UI::Text(MsToSeconds(delta));
                             UI::PopStyleColor();
@@ -412,7 +411,7 @@ void DrawMainInterior() {
 
                 if (Setting_ShowCpPositionDelta) {
                     UI::TableNextColumn();
-                    if (cpTracker !is null) {
+                    if (cpTracker !is null && cpTracker.lastCpCount > 1) {
                         int delta = int(i) - cpTracker.priorCpRank;
                         string cpd = (delta < 0 ? "-" : (delta > 0 ? "+" : ""))
                             + Math::Abs(delta);
@@ -422,7 +421,7 @@ void DrawMainInterior() {
                     }
                 }
 
-                if (ShowBestLapCol && cpTracker.bestLapTime > 0) {
+                if (ShowBestLapCol) {
                     UI::TableNextColumn();
                     if (cpTracker !is null) {
                         auto bt = int(cpTracker.bestLapTime);
