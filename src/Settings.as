@@ -90,19 +90,19 @@ void DrawSortAndBestTimesSettings() {
 
     auto pos = UI::GetCursorPos();
     float xStep = UI::GetWindowContentRegionWidth() / 5.;
-    Setting_ShowTimeDeltaToFirst = UI::Checkbox("+/- to 1st?", Setting_ShowTimeDeltaToFirst);
+    Setting_ShowTimeDeltaToFirst = UI::Checkbox("+- to 1st?", Setting_ShowTimeDeltaToFirst);
     pos.x += xStep;
     UI::SetCursorPos(pos);
-    Setting_ShowTimeDeltaToAbove = UI::Checkbox("+/- to next?", Setting_ShowTimeDeltaToAbove);
+    Setting_ShowTimeDeltaToAbove = UI::Checkbox("+- to next?", Setting_ShowTimeDeltaToAbove);
     pos.x += xStep;
     UI::SetCursorPos(pos);
-    Setting_ShowCpPositionDelta = UI::Checkbox("CP pos. +/-?", Setting_ShowCpPositionDelta);
+    Setting_ShowCpPositionDelta = UI::Checkbox("Pos. +-?", Setting_ShowCpPositionDelta);
     pos.x += xStep;
     UI::SetCursorPos(pos);
-    Setting_ShowBestLapTimeCol = UI::Checkbox("Best Lap?", Setting_ShowBestLapTimeCol);
+    Setting_ShowBestLapTimeCol = UI::Checkbox("B Lap?", Setting_ShowBestLapTimeCol);
     pos.x += xStep;
     UI::SetCursorPos(pos);
-    Setting_ShowBestTimeCol = UI::Checkbox("Best Time?", Setting_ShowBestTimeCol);
+    Setting_ShowBestTimeCol = UI::Checkbox("B Time?", Setting_ShowBestTimeCol);
 }
 
 [SettingsTab name="Colors" icon="PaintBrush" order="10"]
