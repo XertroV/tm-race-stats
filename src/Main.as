@@ -199,10 +199,10 @@ vec4 ScaledCpColor(uint cp, uint totalCps) {
     return finishColor * progress + vec4(1,1,1,1) * (1. - progress);
 }
 
-vec4 ScaledCpDeltaColor(int cpd) {
+vec4 ScaledCpDeltaColor(int cpd, float increments = 4.) {
     if (cpd == 0) return vec4(.5, .5, .5, .5);
     vec4 col = cpd < 0 ? blueColor : redColor;
-    float progress = Math::Clamp(float(Math::Abs(cpd) + 2) / 4., 0., 1.);
+    float progress = Math::Clamp(float(Math::Abs(cpd)) / increments, 0.3, 1.);
     return col * progress + vec4(1,1,1,1) * (1. - progress);
 }
 
@@ -351,10 +351,15 @@ void DrawMainInterior() {
                     if (i > 0 && (isTimeAttackSorting || player.IsSpawned)) {
                         int playerTime = isTimeAttackSorting ? sorted[i].BestTime : sorted[i].LastCpOrRespawnTime;
                         int firstTime = isTimeAttackSorting ? firstPlacePlayer.BestTime : firstPlacePlayer.CpTimes[player.CpCount];
+                        int extraTime = 0;
+                        // int extraTime = isTimeAttackSorting || player.CpCount == firstPlacePlayer.CpCount ? 0
+                        //     : firstPlacePlayer.LastCpOrRespawnTime - firstPlacePlayer.CpTimes[player.CpCount];
                         if (playerTime >= 0) {
-                            int delta = firstTime - playerTime;
+                            int delta = firstTime - playerTime + extraTime;
+                            int deltaMod = 0;
                             if (isTimeAttackSorting) delta *= -1;
-                            UI::PushStyleColor(UI::Col::Text, ScaledCpDeltaColor(10));
+                            else if (delta != 0) deltaMod = delta < 0 ? -1000 : 1000;
+                            UI::PushStyleColor(UI::Col::Text, ScaledCpDeltaColor((delta + deltaMod) / 1000, 10));
                             UI::Text(MsToSeconds(delta));
                             UI::PopStyleColor();
                         }
@@ -367,10 +372,15 @@ void DrawMainInterior() {
                     if (i > 0 && priorPlayer !is null && (isTimeAttackSorting || player.IsSpawned)) {
                         int playerTime = isTimeAttackSorting ? sorted[i].BestTime : sorted[i].LastCpOrRespawnTime;
                         int aboveTime = isTimeAttackSorting ? priorPlayer.BestTime : priorPlayer.CpTimes[player.CpCount];
+                        int extraTime = 0;
+                        // int extraTime = isTimeAttackSorting || player.CpCount == priorPlayer.CpCount ? 0
+                        //     : priorPlayer.LastCpOrRespawnTime - priorPlayer.CpTimes[player.CpCount];
                         if (playerTime >= 0) {
-                            int delta = aboveTime - playerTime;
+                            int delta = aboveTime - playerTime + extraTime;
+                            int deltaMod = 0;
                             if (isTimeAttackSorting) delta *= -1;
-                            UI::PushStyleColor(UI::Col::Text, ScaledCpDeltaColor(10));
+                            else if (delta != 0) deltaMod = delta < 0 ? -1000 : 1000;
+                            UI::PushStyleColor(UI::Col::Text, ScaledCpDeltaColor((delta + deltaMod) / 1000, 10));
                             UI::Text(MsToSeconds(delta));
                             UI::PopStyleColor();
                         }
