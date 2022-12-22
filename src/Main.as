@@ -90,6 +90,7 @@ class PlayerCpTracker {
     int lastCpRank = 1;
     int priorCpRank = 1;
     int lastCpRankDelta = 0;
+    int bestLapTime = -1;
 
     PlayerCpTracker(MLFeed::PlayerCpInfo_V2@ player, int rank) {
         lastCpCount = player.CpCount;
@@ -104,6 +105,17 @@ class PlayerCpTracker {
         lastCpRank = rank;
         if (lastCpCount == 0) {
             // lastCpRankDelta = 0;
+        }
+        int lapCount = GetLapCount();
+        int cpsPerLap = GetCPsToFinish() / lapCount;
+        for (int lap = 1; lap <= lapCount && (lap * cpsPerLap <= player.CpCount); lap++) {
+            int lastLapCp = (lap - 1) * cpsPerLap;
+            int thisLapCp = lap * cpsPerLap;
+            if (thisLapCp > player.CpCount) break;
+            int tmpLapTime = player.CpTimes[thisLapCp] - player.CpTimes[lastLapCp];
+            if (bestLapTime < 0 || tmpLapTime < bestLapTime) {
+                bestLapTime = tmpLapTime;
+            }
         }
     }
 }
@@ -174,6 +186,9 @@ SortMethod g_sortMethod = SortMethod::Race_Respawns;
 bool Setting_ShowBestTimeCol = true;
 
 [Setting hidden]
+bool Setting_ShowBestLapTimeCol = true;
+
+[Setting hidden]
 bool Setting_ShowCpPositionDelta = true;
 
 [Setting hidden]
@@ -242,12 +257,17 @@ void DrawMainInterior() {
     if (!Setting_HideSortSettings)
         DrawSortAndBestTimesSettings();
 
+    bool ShowBestLapCol = Setting_ShowBestLapTimeCol && GetLapCount() > 1;
+    bool showingLaps = S_ShowLapNumber && GetLapCount() > 1;
+
     uint cols = 4;
-    if (S_ShowLapNumber)
+    if (showingLaps)
         cols++;
     if (Setting_ShowTimeDeltaToFirst)
         cols++;
     if (Setting_ShowTimeDeltaToAbove)
+        cols++;
+    if (ShowBestLapCol)
         cols++;
     if (Setting_ShowBestTimeCol)
         cols++;
@@ -264,7 +284,6 @@ void DrawMainInterior() {
             ? theHook.SortedPlayers_TimeAttack
             : theHook.SortedPlayers_Race_Respawns);
 
-    bool showingLaps = S_ShowLapNumber && GetLapCount() > 1;
 
     const MLFeed::PlayerCpInfo_V2@ firstPlacePlayer = null;
     if (sorted.Length > 0) {
@@ -285,6 +304,8 @@ void DrawMainInterior() {
             UI::TableSetupColumn("+/- to next");
         if (Setting_ShowCpPositionDelta)
             UI::TableSetupColumn("Pos +/-");
+        if (ShowBestLapCol)
+            UI::TableSetupColumn("Best Lap");
         if (Setting_ShowBestTimeCol)
             UI::TableSetupColumn("Best Time");
         UI::TableHeadersRow();
@@ -387,9 +408,10 @@ void DrawMainInterior() {
                     }
                 }
 
+                auto cpTracker = GetPlayersCpTracker(player.name);
+
                 if (Setting_ShowCpPositionDelta) {
                     UI::TableNextColumn();
-                    auto cpTracker = GetPlayersCpTracker(player.name);
                     if (cpTracker !is null) {
                         int delta = int(i) - cpTracker.priorCpRank;
                         string cpd = (delta < 0 ? "-" : (delta > 0 ? "+" : ""))
@@ -397,6 +419,14 @@ void DrawMainInterior() {
                         UI::PushStyleColor(UI::Col::Text, ScaledCpDeltaColor(delta));
                         UI::Text(cpd);
                         UI::PopStyleColor();
+                    }
+                }
+
+                if (ShowBestLapCol && cpTracker.bestLapTime > 0) {
+                    UI::TableNextColumn();
+                    if (cpTracker !is null) {
+                        auto bt = int(cpTracker.bestLapTime);
+                        if (bt > 0) UI::Text(MsToSeconds(bt));
                     }
                 }
 
