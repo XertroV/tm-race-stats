@@ -59,9 +59,8 @@ void WatchPlayerCpCounts() {
         }
         if (!g_windowVisible) continue;
         for (uint i = 0; i < raceData.SortedPlayers_Race.Length; i++) {
-            auto player = raceData.SortedPlayers_Race[i];
+            auto player = cast<MLFeed::PlayerCpInfo_V3>(raceData.SortedPlayers_Race[i]);
             if (!playerLastCpCounts.Exists(player.name)) {
-                // @playerLastCpCounts[player.name] = PlayerCpTracker(player, i);
                 playerLastCpCounts.Set(player.name, @PlayerCpTracker(player, i));
             } else {
                 auto cpTracker = GetPlayersCpTracker(player.name);
@@ -92,31 +91,22 @@ class PlayerCpTracker {
     int lastCpRankDelta = 0;
     int bestLapTime = -1;
 
-    PlayerCpTracker(MLFeed::PlayerCpInfo_V2@ player, int rank) {
+    PlayerCpTracker(MLFeed::PlayerCpInfo_V3@ player, int rank) {
         lastCpCount = player.CpCount;
         lastCpRank = rank;
+        if (player.BestLapTimes !is null && player.BestLapTimes.Length > 0) {
+            bestLapTime = int(player.BestLapTimes[player.BestLapTimes.Length-1]);
+        }
     }
 
-    void UpdateFrom(MLFeed::PlayerCpInfo_V2@ player, int rank) {
+    void UpdateFrom(MLFeed::PlayerCpInfo_V3@ player, int rank) {
         if (lastCpCount == player.CpCount) return;
         lastCpCount = player.CpCount;
         lastCpRankDelta = rank - lastCpRank;
         priorCpRank = lastCpRank;
         lastCpRank = rank;
-        if (lastCpCount == 0) {
-            // lastCpRankDelta = 0;
-        }
-        int lapCount = GetLapCount();
-        int cpsPerLap = GetCPsToFinish() / lapCount;
-        for (int lap = 1; lap <= lapCount && (lap * cpsPerLap <= player.CpCount); lap++) {
-            int lastLapCp = (lap - 1) * cpsPerLap;
-            int thisLapCp = lap * cpsPerLap;
-            if (thisLapCp > player.CpCount) break;
-            if (player.CpTimes[thisLapCp] == 0) continue;
-            int tmpLapTime = player.CpTimes[thisLapCp] - player.CpTimes[lastLapCp];
-            if (bestLapTime < 0 || tmpLapTime < bestLapTime && tmpLapTime > 0) {
-                bestLapTime = tmpLapTime;
-            }
+        if (player.BestLapTimes !is null && player.BestLapTimes.Length > 0) {
+            bestLapTime = int(player.BestLapTimes[player.BestLapTimes.Length-1]);
         }
     }
 }
